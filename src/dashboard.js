@@ -47,9 +47,9 @@ function run(features, results, centroids) {
     height: 150, centerHeight: 50,
     colors: COLORS,
     // TODO: Remove this temporary code
-    colors: {
-      ...COLORS, positiveAutocorrelation: COLORS.highHigh, negativeAutocorrelation: COLORS.highLow
-    }
+    // colors: {
+    //   ...COLORS, positiveAutocorrelation: COLORS.highHigh, negativeAutocorrelation: COLORS.highLow
+    // }
   })
 
   // Moran network scatterplot
