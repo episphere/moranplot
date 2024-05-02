@@ -38,11 +38,22 @@ function run(features, results, centroids) {
   //  TODO: Un-hardcode to US
   areaNameMap = new Map(features.features.map(d => [d.id, d.properties.name + ", " + d.state.name]))
 
-  const width = elements.networkContainer.getBoundingClientRect().width 
+  const resizeObserver = new ResizeObserver(() => drawPlots(features, results, centroids))
+  resizeObserver.observe(elements.mapContainer)
+  
+}
+
+function drawPlots(features, results, centroids) {
+  elements.networkContainer.innerHTML = ''
+  elements.dualContainer.innerHTML = ''
+  elements.mapContainer.innerHTML = ''
+
+  console.log("Draw!")
+  const networkWidth = elements.networkContainer.getBoundingClientRect().width 
 
   // Moran dual density plot
   const moranDualPlot = new MoranDualDensity(results, {
-    width, marginLeft: 20, marginRight: 20,
+    width: networkWidth, marginLeft: 20, marginRight: 20,
     textMode: "label_only", fontSize: 14,
     height: 150, centerHeight: 50,
     colors: COLORS,
@@ -54,16 +65,18 @@ function run(features, results, centroids) {
 
   // Moran network scatterplot
   const moranNetworkPlot = new MoranNetwork(results, {
-    width,  height: width, 
+    width: networkWidth, height: networkWidth, 
     zExtent: moranDualPlot.zExtent, 
     drawAxisConnections: true,
     hideXAxis:  true, marginBottom: 10,
     colors: {...COLORS, notSignificant: COLORS.notSignificantPoint},
   })
 
-  // // Cluster map
+  console.log(elements.mapContainer.getBoundingClientRect())
+  
+  // Cluster map
   const clusterMap = new ClusterMap(results, features, { 
-    //width: elements.mapContainer.getBoundingClientRect().width,
+    width: elements.mapContainer.getBoundingClientRect().width,
     height: elements.mapContainer.getBoundingClientRect().height,
     colors: {...COLORS, notSignificant: "whitesmoke"},
     plotOptions: {

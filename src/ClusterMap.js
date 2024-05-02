@@ -83,6 +83,7 @@ export class ClusterMap {
       plot = Plot.plot({
         ...this.plotOptions, 
         width: this.width,
+        height: this.height,
         marks: [
           Plot.geo(this.featureCollection, {
             fill: d => this.colorMap.get(this.resultMap.get(d.id)?.label),
