@@ -1,11 +1,27 @@
 :root {
-  --header-height: 55px;
+  --main-header-height: 55px;
+  --info-header-height: 40px;
+
+  --header-height: calc(var(--main-header-height) + var(--info-header-height));
   --moran-dual-height: 150px;
   --main-padding: 20px;
+  --title-height: 30px;
 }
 
 body {
   margin: 0px;
+}
+
+code {
+  padding-inline: 5px;
+  padding-block: 3px;
+  margin-inline: 5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+code:hover {
+  background-color: #94ada5;
 }
 
 .observable-logo {
@@ -17,13 +33,27 @@ body {
 }
 
 header {
-  height: var(--header-height);
+  box-shadow: 0px 5px 9px #d4d4d4;
+}
+
+#main-header {
+  height: var(--main-header-height);
   background: #94ada5;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-left: 20px;
-  box-shadow: 0px 5px 9px #d4d4d4;
+}
+
+#info-header {
+  height: var(--info-header-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #83a399;
+  font-family: sans-serif;
+  font-size: .9em;
+  color: white;
 }
 
 #links-container i {
@@ -79,6 +109,16 @@ header {
   background-color: wheat;
 } */
 
+#title {
+  position: fixed;
+  left: 50%;
+  font-family: sans-serif;
+  font-size: .9em;
+  font-weight: bold;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
 
 #content {
   height: calc(100vh - var(--header-height) - var(--main-padding)*2); 
@@ -90,6 +130,7 @@ header {
 }
 
 #dashboard {
+  position: relative;
   width: 100%;
   max-height:  calc(100vh - var(--header-height) - var(--main-padding)*2); 
   display: flex;
