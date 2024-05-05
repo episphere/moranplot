@@ -12,7 +12,7 @@ export class MoranDualDensity {
       margin: 30,
       centerHeight: 50,
       
-      textMode: "none",
+      textMode: "label_only",
       fontSize: 12,
       
       zDistribution: null, 
@@ -26,7 +26,7 @@ export class MoranDualDensity {
         negativeAutocorrelation: "purple",
       },
     }, options)
-    calcMargins(options)
+    Object.assign(options, calcMargins(options))
     Object.assign(this, options)
 
     this.resultIndex = d3.index(results, d => d.id)

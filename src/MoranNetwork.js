@@ -9,22 +9,22 @@ export class MoranNetwork {
     options = mergeOptions({
       width: 480, 
       height: 480, 
-      margin: 20,
+      margin: 35
+      ,
       
       fontSize: 12,
       
       colors: {
-        highlight: "blue",
-        highHigh: "red",
-        highLow: "pink",
-        lowHigh: "lightblue",
-        lowLow: "blue",
-        notSignificant: "grey"
+        highHigh: "#ff3d47",
+        highLow: "#f99ae4",
+        lowHigh: "#94d1ff",
+        lowLow: "#186ffb",
+        notSignificant: "#d1d1d1"
       },
 
       xLabel: "Value (z)",
       
-      pointOpacity: 0.5,
+      pointOpacity: 0.5, pointOpacityDimmed: 0.05,
       rSmall: 2, rMedium: 3, rBig: 5,      
       drawAxisConnections: false,
       hideXAxis: false, 
@@ -136,7 +136,7 @@ export class MoranNetwork {
       this.prevNeighborSelect = neighborSelect
       neighborSelect.attr("r", this.rMedium)
 
-      this.dotSelect.attr("opacity", .1)
+      this.dotSelect.attr("opacity", this.pointOpacityDimmed)
       neighborSelect.attr("opacity", 1)
       elemSelect.attr("opacity", 1)
 

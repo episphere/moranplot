@@ -48,7 +48,6 @@ function drawPlots(features, results, centroids) {
   elements.dualContainer.innerHTML = ''
   elements.mapContainer.innerHTML = ''
 
-  console.log("Draw!")
   const networkWidth = elements.networkContainer.getBoundingClientRect().width 
 
   // Moran dual density plot
@@ -79,9 +78,7 @@ function drawPlots(features, results, centroids) {
     width: elements.mapContainer.getBoundingClientRect().width,
     height: elements.mapContainer.getBoundingClientRect().height,
     colors: {...COLORS, notSignificant: "whitesmoke"},
-    plotOptions: {
-      projection: {type: "albers-usa", domain: features}
-    }
+    projection: {type: "albers-usa", domain: features}
   })
 
   moranNetworkPlot.onHover((d,i) => {
