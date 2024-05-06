@@ -46,6 +46,10 @@ export class MoranNetwork {
       ["Not significant", this.colors.notSignificant]
     ])
     this.resultMap = d3.index(this.results, d => d.id)
+    
+    this.focusId = null 
+    this.selectIdSet = new Set() 
+    
     this.plotContainer = document.createElement("div")
   }
 
@@ -91,6 +95,7 @@ export class MoranNetwork {
 
     this.plotSelect = d3.select(this.moranPlot)
     this.dotSelect = this.plotSelect.selectAll("circle")
+      .data(this.results)
     this.linkG = this.plotSelect.append("g").lower()
     this.axisLinkG = this.plotSelect.append("g")
 
@@ -100,6 +105,44 @@ export class MoranNetwork {
       this.#focus(result?.id, d3.select(elem), d3.select(elemPrev))
       if (this.hoverListener) this.hoverListener(this.results[i], i)
     }, 15)
+
+    const cascadeAdd = (id, label) => {
+      const result = this.resultMap.get(id) 
+      if (result?.label == label && !this.selectIdSet.has(id)) {
+        this.selectIdSet.add(id) 
+        for (const [neighborId] of result.neighbors) {
+          cascadeAdd(neighborId, label)
+        }
+      }
+    }
+
+    let clickCount = 0
+    this.plotContainer.addEventListener("click", () => {
+      clickCount++
+
+      const clickedId = this.focusId 
+      setTimeout(() => {
+        if (clickCount == 1) {
+          if (clickedId) {
+            if (this.selectIdSet.has(clickedId)) {
+              this.selectIdSet.delete(clickedId)
+            } else {
+              this.selectIdSet.add(clickedId)
+            }
+          } else {
+            this.selectIdSet.clear()
+            this.#draw()
+          }
+        } else if (clickCount == 2) {
+          if (clickedId) {
+            const result = this.resultMap.get(clickedId)
+            cascadeAdd(clickedId, result.label)
+            this.#draw()
+          }
+        } 
+        clickCount = 0
+      }, 200)
+    })
     
     this.plotContainer.appendChild(this.moranPlot)
     return this.plotContainer
@@ -116,88 +159,68 @@ export class MoranNetwork {
   }
 
   #focus(id, elemSelect) {
+    if (id == this.focusId) return 
+    this.focusId = id 
+    this.#draw()
+  }
 
-    if (this.prevNeighborSelect) {
-      this.prevNeighborSelect
-        .attr("r", this.rSmall)
-        .attr("opacity", this.pointOpacity)
-    }
+  #draw() {
 
-    this.elemPrevSelect?.attr("r", this.rSmall)
-    elemSelect.attr("r", this.rBig) 
+    const neighborSet = new Set() 
+    const joins = [] 
+    for (const id of new Set([this.focusId, ...this.selectIdSet])) {
+      if (id == null) continue
 
-    const result = this.resultMap.get(id)
-    if (Result.safeParse(result).success) {
-      const neighborSet = new Set(result.neighbors.map(d => d[0]))
-      const neighborSelect = this.dotSelect.filter(i => neighborSet.has(this.results[i].id))
+      const result = this.resultMap.get(id)
+      const thisNeighborSet = new Set()
+      result?.neighbors.forEach(([id]) => {
+        neighborSet.add(id)
+        thisNeighborSet.add(id)
+      })
+
+
+      const fromSelect = this.dotSelect.filter((_,i) => this.results[i]?.id == id)
+      const toSelect = this.dotSelect.filter((_,i) => thisNeighborSet.has(this.results[i].id))
       const neighborResults = []
-      neighborSelect.each(i => neighborResults.push(this.results[i]))
-      this.prevNeighborSelect = neighborSelect
-      neighborSelect.attr("r", this.rMedium)
-
-      this.dotSelect.attr("opacity", this.pointOpacityDimmed)
-      neighborSelect.attr("opacity", 1)
-      elemSelect.attr("opacity", 1)
-
-      this.prevConnect = this.#connect(this.linkG, elemSelect, neighborSelect, neighborResults)
-      if (this.drawAxisConnections) {
-        this.prevAxisConnect = this.#connectAxis(this.axisLinkG, elemSelect, neighborSelect)
-      }
-    } else {
-      this.dotSelect.attr("opacity", this.pointOpacity)
-      if (this.prevConnect) {
-        this.prevConnect.remove()
-      }
-      if (this.prevAxisConnect) {
-        this.prevAxisConnect.remove()
-      }
+      toSelect.each((_,i) => neighborResults.push(this.results[i]))
+      const fromPoint = [+fromSelect.attr("cx"), +fromSelect.attr("cy")]
+      toSelect.each(function(result) {
+        var circle = d3.select(this)
+        joins.push({fromPoint, toPoint: [+circle.attr("cx"), +circle.attr("cy")], label: result.label})
+      }) 
     }
 
-    this.elemPrevSelect = elemSelect
-  }
+    this.dotSelect
+      .attr("r", (_,i) => {
+        const id = this.results[i].id
+        if (this.focusId == id || this.selectIdSet.has(id)) {
+          return this.rBig
+        } else if (neighborSet.has(id)) {
+          return this.rMedium
+        } else {
+          return this.rSmall
+        }
+      })
+      .attr("opacity", (_,i) => {
+        const id = this.results[i].id
+        if (this.selectIdSet.size == 0 && this.focusId == null) {
+          return this.pointOpacity
+        } else if (this.focusId == id || this.selectIdSet.has(id) || neighborSet.has(id)) {
+          return 1
+        } else {
+          return this.pointOpacityDimmed
+        }
+      })
 
-  #connect(g, fromSelect, toSelect, neighborResults) {
-    const fromPoint = [fromSelect.attr("cx"), fromSelect.attr("cy")]
-    const toPoints = []
-    toSelect.each(function() {
-      var circle = d3.select(this)
-      toPoints.push([+circle.attr("cx"), +circle.attr("cy")])
-    })
-    
-    return g.selectAll("line")
-      .data(toPoints)
+    this.linkG.selectAll("line")
+      .data(joins)
       .join("line")
-        .attr("x1", fromPoint[0])
-        .attr("y1", fromPoint[1])
-        .attr("x2", d => d[0])
-        .attr("y2", d => d[1])
-        .attr("stroke", (_,i) => this.colorMap.get(neighborResults[i]?.label))
+        .attr("x1", d => d.fromPoint[0])
+        .attr("y1", d => d.fromPoint[1])
+        .attr("x2", d => d.toPoint[0])
+        .attr("y2", d => d.toPoint[1])
+        .attr("stroke", d => this.colorMap.get(d.label))
+
   }
 
-  #connectAxis(g, focusSelect, neighborSelect) {
-    const points = []
-    neighborSelect.each(function() {
-      var circle = d3.select(this)
-      points.push([+circle.attr("cx"), +circle.attr("cy")])
-    })
-    focusSelect.each(function() {
-      var circle = d3.select(this)
-      const point = [+circle.attr("cx"), +circle.attr("cy")]
-      points.push(point)
-      point.focus = true 
-    })
-
-    return g.selectAll("line")
-      .data(points)
-      .join("line")
-        .attr("x1", d => d[0])
-        .attr("y1", d => d[1])
-        .attr("x2", d => d[0])
-        .attr("y2", this.height - this.marginBottom)
-        .attr("stroke", "grey")
-        .attr("stroke-dasharray", d => d.focus ? "3,3" : "2,2")
-        .attr("stroke-opacity", .5)
-        .attr("stroke-width", d => d.focus ? 3 : 1)
-        
-  }
 }
