@@ -15,8 +15,8 @@ export class MoranDualDensity {
       textMode: "label_only",
       fontSize: 12,
       
-      zDistribution: null, 
-      lagDistribution: null, 
+      zDistribution: undefined, 
+      lagDistribution: undefined, 
       
       colors: {
         distribution: "#E5E4E2",
@@ -26,15 +26,16 @@ export class MoranDualDensity {
         negativeAutocorrelation: "purple",
       },
     }, options)
+
     Object.assign(options, calcMargins(options))
     Object.assign(this, options)
 
     this.resultIndex = d3.index(results, d => d.id)
-    if (!this.zDistribution) {
+    if (this.zDistribution === undefined) {
       this.zDistribution = estimateDistribution(results.map(d => d.z))
     }
     this.zExtent = d3.extent(this.zDistribution, d => d[0])
-    if (!this.lagDistribution) {
+    if (this.lagDistribution === undefined) {
       this.lagDistribution = estimateDistribution(results.map(d => d.lag))
     }
 
@@ -90,7 +91,11 @@ export class MoranDualDensity {
 
   #valueDensityPlot(result) {
 
-    const yMax = d3.max(this.zDistribution.concat(this.lagDistribution), d => d[1])
+    let allY = this.zDistribution
+    if (this.lagDistribution) {
+      allY = allY.concat(this.lagDistribution)
+    }
+    const yMax = d3.max(allY, d => d[1])
     const pointY = .4
 
     // TODO: Dim the axis labels when the z marker overlaps
@@ -104,10 +109,14 @@ export class MoranDualDensity {
       Plot.areaY(this.zDistribution, {
         x: d => d[0], y: d => d[1], fill: this.colors.distribution, curve: "basis", opacity: .5, 
       }),
-      Plot.areaY(this.lagDistribution, {
-        x: d => d[0], y: d => d[1], fill: this.colors.connection, opacity: .08, mixBlendMode: "multiply"
-      }),
+      
     ] 
+
+    if (this.lagDistribution) {
+      marks.push(Plot.areaY(this.lagDistribution, {
+        x: d => d[0], y: d => d[1], fill: this.colors.connection, opacity: .08, mixBlendMode: "multiply"
+      }))
+    }
 
     if (Result.safeParse(result).success) {
       const neighborResults = result.neighbors.map(([id,w]) => this.resultIndex.get(id)).filter(d => d)

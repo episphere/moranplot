@@ -3,7 +3,7 @@ import { MoranNetwork } from './MoranNetwork.js';
 import { MoranDualDensity } from './MoranDualDensity.js';
 import { ClusterMap } from './ClusterMap.js';
 import { addPopperTooltip } from './helper.js';
-import { LagPolar } from './LagPolar.js';
+import { LagRadial } from './LagRadial.js';
 
 import * as Popper from 'https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/+esm'
 
@@ -52,9 +52,9 @@ function drawPlots(features, results, centroids) {
 
   // Moran dual density plot
   const moranDualPlot = new MoranDualDensity(results, {
-    width: networkWidth, marginLeft: 20, marginRight: 20,
+    width: networkWidth, marginLeft: 35, marginRight: 35,
     textMode: "label_only", fontSize: 14,
-    height: 150, centerHeight: 50,
+    height: 170, centerHeight: 50,
     colors: COLORS,
     // TODO: Remove this temporary code
     // colors: {
@@ -70,8 +70,6 @@ function drawPlots(features, results, centroids) {
     hideXAxis:  true, marginBottom: 10,
     colors: {...COLORS, notSignificant: COLORS.notSignificantPoint},
   })
-
-  console.log(elements.mapContainer.getBoundingClientRect())
   
   // Cluster map
   const clusterMap = new ClusterMap(results, features, { 
@@ -111,7 +109,7 @@ function addMapTooltip(plots, centroids, results) {
   tooltipElem.appendChild( tooltipText)
 
   const centroidIds = new Set(centroids.map(d => d.id))
-  const lagPolarPlot = new LagPolar(results.filter(d => centroidIds.has(d.id)), {
+  const lagPolarPlot = new LagRadial(results.filter(d => centroidIds.has(d.id)), {
     size: 120, zExtent: plots.moranDualPlot.zExtent, featureCentroids: centroids, pointRadius: 2.5,
   })
   tooltipElem.appendChild(lagPolarPlot.plot())

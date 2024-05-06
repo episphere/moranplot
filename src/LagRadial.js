@@ -5,7 +5,7 @@ import { mergeOptions, getPolarAngles } from "./helper.js"
 import { Result } from "./types.js"
 
 
-export class LagPolar {
+export class LagRadial {
   constructor(results, options) {
     options = mergeOptions({
       featureCentroids: undefined, 

@@ -116,6 +116,10 @@ export function mergeOptions(defaultOptions, userOptions={}) {
   if (userOptions == null) {
     return defaultOptions
   }
+
+  if (defaultOptions == null) {
+    return userOptions
+  }
   
   for (const [property, userValue] of Object.entries(userOptions)) {
     const defaultValue = defaultOptions[property]

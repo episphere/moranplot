@@ -9,8 +9,7 @@ export class MoranNetwork {
     options = mergeOptions({
       width: 480, 
       height: 480, 
-      margin: 35
-      ,
+      margin: 35,
       
       fontSize: 12,
       
