@@ -10,7 +10,7 @@ export const Result = z.object({
   lowerCutoff: z.number().optional(),
   upperCutoff: z.number().optional(),
   permutationDistribution: Density.optional(),
-  neighbors: z.array(Neighbor)
+  neighborWeights: z.array(Neighbor)
 })
 export const ResultCutoff = Result.extend({
   lowerCutoff: z.number(),

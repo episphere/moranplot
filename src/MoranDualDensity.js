@@ -15,12 +15,14 @@ export class MoranDualDensity {
       textMode: "label_only",
       fontSize: 12,
       
-      zDistribution: undefined, 
-      lagDistribution: undefined, 
+      zDistribution: "auto", 
+      lagDistribution: "auto", 
       
       colors: {
+        font: "grey",
         distribution: "#E5E4E2",
         z: "black",
+        neighbors: "black",
         connection: "blue",
         positiveAutocorrelation: "green",
         negativeAutocorrelation: "purple",
@@ -31,11 +33,11 @@ export class MoranDualDensity {
     Object.assign(this, options)
 
     this.resultIndex = d3.index(results, d => d.id)
-    if (this.zDistribution === undefined) {
+    if (this.zDistribution === "auto") {
       this.zDistribution = estimateDistribution(results.map(d => d.z))
-    }
+    } 
     this.zExtent = d3.extent(this.zDistribution, d => d[0])
-    if (this.lagDistribution === undefined) {
+    if (this.lagDistribution === "auto") {
       this.lagDistribution = estimateDistribution(results.map(d => d.lag))
     }
 
@@ -103,9 +105,6 @@ export class MoranDualDensity {
       Plot.text(["Value (z) →"], {
         frameAnchor: "top-right", dx: this.marginRight, 
       }),
-      Plot.text(["Spatial lag →"], {
-        frameAnchor: "top-right", dx: this.marginRight, dy: this.fontSize, fill: this.colors.connection
-      }),
       Plot.areaY(this.zDistribution, {
         x: d => d[0], y: d => d[1], fill: this.colors.distribution, curve: "basis", opacity: .5, 
       }),
@@ -113,13 +112,16 @@ export class MoranDualDensity {
     ] 
 
     if (this.lagDistribution) {
+      marks.push(Plot.text(["Spatial lag →"], {
+        frameAnchor: "top-right", dx: this.marginRight, dy: this.fontSize, fill: this.colors.connection
+      }))
       marks.push(Plot.areaY(this.lagDistribution, {
         x: d => d[0], y: d => d[1], fill: this.colors.connection, opacity: .08, mixBlendMode: "multiply"
       }))
     }
 
     if (Result.safeParse(result).success) {
-      const neighborResults = result.neighbors.map(([id,w]) => this.resultIndex.get(id)).filter(d => d)
+      const neighborResults = result.neighborWeights.map(([id,w]) => this.resultIndex.get(id)).filter(d => d)
       marks.push.apply(marks,  [
         Plot.link(neighborResults, {
           x1: d => d.z, y1: yMax*pointY,
@@ -128,7 +130,7 @@ export class MoranDualDensity {
         }),
         Plot.dot(neighborResults, { 
           y: yMax*pointY, x: d => d.z, 
-          fill: "black", opacity: .6, r: 2
+          fill: "black", opacity: .7, r: 2
         }),
 
         Plot.link([result], {
@@ -149,7 +151,7 @@ export class MoranDualDensity {
     marks.push(Plot.ruleX([0], {strokeOpacity: .3, strokeWidth: .5}))
 
     return Plot.plot({
-      style: {fontSize: this.fontSize},
+      style: {fontSize: this.fontSize, color: this.colors.font},
       
       width: this.width,
       height: (this.height - this.centerHeight)/2,
@@ -209,14 +211,14 @@ export class MoranDualDensity {
 
     marks.push.apply(marks, [
       Plot.text([this.zExtent[0].toFixed(2), 0, this.zExtent[1].toFixed(2)], {
-        x: d => d, frameAnchor: "top", dy: 3, opacity: .5}),
+        x: d => d, frameAnchor: "top", dy: 3, opacity: .8}),
       Plot.text([scaleMap.domain()[0].toFixed(2), 0, scaleMap.domain()[1].toFixed(2)],  Plot.mapX((D) => D.map(scaleMap), {
-        x: d => d, frameAnchor: "bottom", dy: -3, opacity: .5})),
+        x: d => d, frameAnchor: "bottom", dy: -3, opacity: .8})),
       Plot.ruleX([0], {strokeOpacity: .3, strokeWidth: .5})
     ])
     
     return Plot.plot({
-      style: { fontSize: this.fontSize }, 
+      style: {fontSize: this.fontSize, color: this.colors.font},
       
       width: this.width, 
       height: this.centerHeight,
@@ -255,7 +257,7 @@ export class MoranDualDensity {
 
     
     return Plot.plot({
-      style: { fontSize: this.fontSize }, 
+      style: {fontSize: this.fontSize, color: this.colors.font},
       
       width: this.width,
       height: (this.height - this.centerHeight)/2,

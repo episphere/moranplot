@@ -62,7 +62,7 @@ export class LagRadial {
       const angleIndex = d3.index(this.neighborAngles, d => d.from, d => d.to)
       this.angleMap = new Map()
       for (const result of this.results) {
-        const angles = result.neighbors.map(([id]) => {
+        const angles = result.neighborWeights.map(([id]) => {
           const angle = angleIndex.get(result.id)?.get(id)
           if (!Number.isFinite(angle.angle)) {
             throw new Error(`neighborAngles specified in arguments, but missing angle from ${result.id} to ${id}`)
@@ -87,11 +87,11 @@ export class LagRadial {
       this.angleMap = new Map()
       for (const result of this.results) {
         const centroid = centroidMap.get(result.id)
-        const neighborCentroids = result.neighbors.map(([id]) => centroidMap.get(id))
+        const neighborCentroids = result.neighborWeights.map(([id]) => centroidMap.get(id))
         const neighborAngles = getPolarAngles(centroid, neighborCentroids)
 
         
-        const angles = neighborAngles.map((d,i) => [result.neighbors[i][0], d])
+        const angles = neighborAngles.map((d,i) => [result.neighborWeights[i][0], d])
         this.angleMap.set(result.id, angles)
       }
 
@@ -99,11 +99,11 @@ export class LagRadial {
       this.angleMap = new Map()
 
       for (const result of results) {
-        if (result.neighbors) {
+        if (result.neighborWeights) {
           const resultAngles = []
           this.angleMap.set(result.id, resultAngles)
-          const angleStep = 2*Math.PI / result.neighbors.length
-          result.neighbors.forEach(([id], i) => {
+          const angleStep = 2*Math.PI / result.neighborWeights.length
+          result.neighborWeights.forEach(([id], i) => {
             resultAngles.push([id, angleStep*i])
           })
         }
@@ -136,12 +136,12 @@ export class LagRadial {
   #focus(id) {
     if (id) {
       const result = this.resultMap.get(id)
-      let neighborResults = result.neighbors.map(d => this.resultMap.get(d[0]))
+      let neighborResults = result.neighborWeights.map(d => this.resultMap.get(d[0]))
       const neighborAngles = this.angleMap.get(id)
 
 
       const pointRadiusScale = d3.scaleLinear()
-        .domain(d3.extent(result.neighbors, d => d[1]))
+        .domain(d3.extent(result.neighborWeights, d => d[1]))
         .range(this.pointRadius)
 
       const innerPoints = neighborAngles.map(([_,angle]) => d3.pointRadial(angle, this.innerRadius))
@@ -164,7 +164,7 @@ export class LagRadial {
         .map(([_,angle],i) => d3.pointRadial(angle, this.rScale(result.lag)))
       neighborPoints.forEach((d,i) => {
         d.i = i
-        d.w = result.neighbors[i][1]
+        d.w = result.neighborWeights[i][1]
         d.z = neighborResults[i]?.z
         d.label = neighborResults[i]?.label
       })

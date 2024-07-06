@@ -110,7 +110,7 @@ export class MoranNetwork {
       const result = this.resultMap.get(id) 
       if (result?.label == label && !this.selectIdSet.has(id)) {
         this.selectIdSet.add(id) 
-        for (const [neighborId] of result.neighbors) {
+        for (const [neighborId] of result.neighborWeights) {
           cascadeAdd(neighborId, label)
         }
       }
@@ -173,7 +173,7 @@ export class MoranNetwork {
 
       const result = this.resultMap.get(id)
       const thisNeighborSet = new Set()
-      result?.neighbors.forEach(([id]) => {
+      result?.neighborWeights.forEach(([id]) => {
         neighborSet.add(id)
         thisNeighborSet.add(id)
       })
