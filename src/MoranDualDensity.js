@@ -122,6 +122,9 @@ export class MoranDualDensity {
 
     if (Result.safeParse(result).success) {
       const neighborResults = result.neighborWeights.map(([id,w]) => this.resultIndex.get(id)).filter(d => d)
+      const dx = result.z > 0 ? 4 : -4
+      const textAnchor = result.z > 0 ? "start" : "end"
+
       marks.push.apply(marks,  [
         Plot.link(neighborResults, {
           x1: d => d.z, y1: yMax*pointY,
@@ -133,8 +136,10 @@ export class MoranDualDensity {
           fill: "black", opacity: .7, r: 2
         }),
 
-        Plot.link([result], {
-          x1: 0, y1: yMax, y2: yMax, x2: "z", stroke: this.colors.z, strokeDasharray: "2,2",  dy: 3
+        Plot.arrow([result], {
+          x1: 0, y1: yMax, y2: yMax, x2: "z", stroke: this.colors.z, dy: 3, insetEnd: 5, 
+          strokeDasharray: "2,2",
+          strokeWidth: 1.2, headLength: 8
         }),
         Plot.dot([result], {
           y: yMax, x: "z", fill: this.colors.z, dy: 3
@@ -142,7 +147,7 @@ export class MoranDualDensity {
         Plot.text([result], {
           x: d => d.z, y: yMax, fill: this.colors.z, 
           text: this.text.z,
-          textAnchor: "start",  dx: 6, dy: 8
+          textAnchor,  dx, dy: 8
         }),
         
       ])   
