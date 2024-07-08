@@ -17,6 +17,7 @@ export class MoranDualDensity {
       
       zDistribution: "auto", 
       lagDistribution: "auto", 
+      lagDistributionDisplay: "stroke", // "fill" or "stroke"
       
       colors: {
         font: "grey",
@@ -115,9 +116,18 @@ export class MoranDualDensity {
       marks.push(Plot.text(["Spatial lag →"], {
         frameAnchor: "top-right", dx: this.marginRight, dy: this.fontSize, fill: this.colors.connection
       }))
-      marks.push(Plot.areaY(this.lagDistribution, {
-        x: d => d[0], y: d => d[1], fill: this.colors.connection, opacity: .08, mixBlendMode: "multiply"
-      }))
+      if (this.lagDistributionDisplay == "fill") {
+        marks.push(Plot.areaY(this.lagDistribution, {
+          x: d => d[0], y: d => d[1], fill: this.colors.connection, opacity: .08, mixBlendMode: "multiply"
+        }))
+      } else if (this.lagDistributionDisplay == "stroke") {
+        marks.push(Plot.lineY(this.lagDistribution, {
+          x: d => d[0], y: d => d[1], stroke: this.colors.connection, opacity: .3, mixBlendMode: "multiply",
+          strokeDasharray: "3,3"
+        }))
+      }
+
+ 
     }
 
     if (Result.safeParse(result).success) {
