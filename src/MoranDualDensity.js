@@ -18,6 +18,8 @@ export class MoranDualDensity {
       zDistribution: "auto", 
       lagDistribution: "auto", 
       lagDistributionDisplay: "stroke", // "fill" or "stroke"
+
+      labelAreas: true,
       
       colors: {
         font: "grey",
@@ -183,6 +185,12 @@ export class MoranDualDensity {
   }
 
   #centerLinkPlot(result, scaleMap) {
+    // Automatically position label to avoid  cut-off boundaries
+    const leftLabel = result.lag > 0 && result.label == "Not significant" || 
+      result.lag < 0 && result.label != "Not significant"
+    const labelTextAnchor = leftLabel ? "end" : "start"
+    const labelDx = leftLabel ? -6 : 6
+
     const marks = [
       Plot.ruleX([result], Plot.mapX((D) => D.map(scaleMap), {
         x: d => d.statistic, stroke: this.colors.connection, strokeDasharray: "2,2"
@@ -197,16 +205,17 @@ export class MoranDualDensity {
       Plot.text([result], {
         x: d => d.lag, fill: this.colors.connection, 
         text: this.text.lag,
-        textAnchor: "start", frameAnchor: "top", dx: 6, dy: 8
+        textAnchor: labelTextAnchor, frameAnchor: "top", dx: labelDx, dy: 8
       }),
       Plot.text([result], {
         x: d => d.lag, fill: this.colors.connection, 
         text: this.text.statistic,
-        textAnchor: "start", frameAnchor: "bottom", dx: 6, dy: -8
+        textAnchor: labelTextAnchor, frameAnchor: "bottom", dx: labelDx, dy: -8
       }),
     ]
 
     if (ResultCutoff.safeParse(result).success) {
+    
       marks.push.apply(marks, [
          Plot.rect([result], Plot.mapX((D) => D.map(scaleMap), {
           y1: -1, y2: 1, x1: d => d.upperCutoff, x2: d3.max(scaleMap.domain()), 
@@ -222,6 +231,18 @@ export class MoranDualDensity {
         Plot.ruleX([result], Plot.mapX((D) => D.map(scaleMap), {
           x: d => d.lowerCutoff, stroke: this.colors.negativeAutocorrelation, strokeDasharray: "3,3"})),
       ])
+
+      if (this.labelAreas) {
+        marks.push.apply(marks, [
+          Plot.text([result], { text: d => d.z > 0 ? "Positive" : "Negative", 
+            fill: d => d.z > 0 ? this.colors.positiveAutocorrelation : this.colors.negativeAutocorrelation, 
+            frameAnchor: "right", textAnchor: "end", dx: -10, opacity: .8}),
+          Plot.text([result], { text: d => d.z <= 0 ? "Positive" : "Negative", 
+              fill: d => d.z <= 0 ? this.colors.positiveAutocorrelation : this.colors.negativeAutocorrelation, 
+              frameAnchor: "left", textAnchor: "start", dx: 10, opacity: .8}),
+       ])
+      }
+      
     }
 
     marks.push.apply(marks, [
