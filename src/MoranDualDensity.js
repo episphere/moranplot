@@ -17,9 +17,11 @@ export class MoranDualDensity {
       
       zDistribution: "auto", 
       lagDistribution: "auto", 
-      lagDistributionDisplay: "stroke", // "fill" or "stroke"
+      lagDistributionDisplay: "stroke", // or "fill" or "stroke"
 
       labelAreas: true,
+
+      areaMode: "cluster_labels", // or "positive_negative" or "hot_cold"
       
       colors: {
         font: "grey",
@@ -29,6 +31,11 @@ export class MoranDualDensity {
         connection: "blue",
         positiveAutocorrelation: "green",
         negativeAutocorrelation: "purple",
+        highHigh: "#ff3d47",
+        highLow: "#f99ae4",
+        lowHigh: "#94d1ff",
+        lowLow: "#186ffb",
+        outlier: "purple"
       },
     }, options)
 
@@ -85,6 +92,23 @@ export class MoranDualDensity {
       const moranExtent = d3.extent(moranDistribution, d => d[0])
       if (result.z < 0) moranExtent.reverse()
       const scaleMap = d3.scaleLinear(moranExtent, this.zExtent)
+
+      if (this.areaMode == "positive_negative") {
+        this.positiveColor = this.colors.positiveAutocorrelation
+        this.negativeColor = this.colors.negativeAutocorrelation
+        this.positiveLabel = "Positive"
+        this.negativeLabel = "Negative"
+      } else if (this.areaMode == "hot_cold") {
+        this.positiveColor = result.z > 0 ? this.colors.highHigh : this.colors.lowLow
+        this.negativeColor = this.colors.outlier
+        this.positiveLabel = result.z > 0 ? "Hot-spot" : "Cold-spot"
+        this.negativeLabel = "Outlier"
+      } else {
+        this.positiveColor = result.z > 0 ? this.colors.highHigh : this.colors.lowLow
+        this.negativeColor = result.z > 0 ? this.colors.highLow : this.colors.lowHigh
+        this.positiveLabel = result.z > 0 ? "High-high" : "Low-low"
+        this.negativeLabel = result.z > 0 ? "High-low" : "Low-high"
+      }
       
       this.plotContainer.appendChild(this.#valueDensityPlot(result))
       this.plotContainer.appendChild(this.#centerLinkPlot(result, scaleMap))
@@ -219,26 +243,26 @@ export class MoranDualDensity {
       marks.push.apply(marks, [
          Plot.rect([result], Plot.mapX((D) => D.map(scaleMap), {
           y1: -1, y2: 1, x1: d => d.upperCutoff, x2: d3.max(scaleMap.domain()), 
-          fill: this.colors.positiveAutocorrelation, fillOpacity: .1
+          fill: this.positiveColor, fillOpacity: .1
         })),
         Plot.rect([result], Plot.mapX((D) => D.map(scaleMap), {
           y1: -1, y2: 1, x1: d => d.lowerCutoff, x2: d3.min(scaleMap.domain()), 
-          fill: this.colors.negativeAutocorrelation, fillOpacity: .1
+          fill: this.negativeColor, fillOpacity: .1
         })),
 
         Plot.ruleX([result], Plot.mapX((D) => D.map(scaleMap), {
-          x: d => d.upperCutoff, stroke: this.colors.positiveAutocorrelation, strokeDasharray: "3,3"})),
+          x: d => d.upperCutoff, stroke: this.positiveColor, strokeDasharray: "3,3"})),
         Plot.ruleX([result], Plot.mapX((D) => D.map(scaleMap), {
-          x: d => d.lowerCutoff, stroke: this.colors.negativeAutocorrelation, strokeDasharray: "3,3"})),
+          x: d => d.lowerCutoff, stroke: this.negativeColor, strokeDasharray: "3,3"})),
       ])
 
       if (this.labelAreas) {
         marks.push.apply(marks, [
-          Plot.text([result], { text: d => d.z > 0 ? "Positive" : "Negative", 
-            fill: d => d.z > 0 ? this.colors.positiveAutocorrelation : this.colors.negativeAutocorrelation, 
+          Plot.text([result], { text: d => d.z > 0 ? this.positiveLabel : this.negativeLabel, 
+            fill: d => d.z > 0 ? this.positiveColor : this.negativeColor, 
             frameAnchor: "right", textAnchor: "end", dx: -10, opacity: .8}),
-          Plot.text([result], { text: d => d.z <= 0 ? "Positive" : "Negative", 
-              fill: d => d.z <= 0 ? this.colors.positiveAutocorrelation : this.colors.negativeAutocorrelation, 
+          Plot.text([result], { text: d => d.z <= 0 ? this.positiveLabel : this.negativeLabel, 
+              fill: d => d.z <= 0 ? this.positiveColor : this.negativeColor, 
               frameAnchor: "left", textAnchor: "start", dx: 10, opacity: .8}),
        ])
       }
@@ -283,9 +307,9 @@ export class MoranDualDensity {
         Plot.areaY(permutationDistribution, Plot.mapX((D) => D.map(scaleMap), {
             x: d => d[0], y: d => d[1], fill: this.colors.distribution, curve: "basis"})),
         Plot.areaY(permutationDistribution.filter(d => d[0] <= result.lowerCutoff), Plot.mapX((D) => D.map(scaleMap), {
-          x: d => d[0], y: d => d[1], fill: this.colors.negativeAutocorrelation, curve: "basis", opacity: .7})),
+          x: d => d[0], y: d => d[1], fill: this.negativeColor, curve: "basis", opacity: .7})),
         Plot.areaY(permutationDistribution.filter(d => d[0] >= result.upperCutoff), Plot.mapX((D) => D.map(scaleMap), {
-          x: d => d[0], y: d => d[1], fill: this.colors.positiveAutocorrelation, curve: "basis", opacity: .7})),
+          x: d => d[0], y: d => d[1], fill: this.positiveColor, curve: "basis", opacity: .7})),
   
         Plot.ruleX([0], {strokeOpacity: .3, strokeWidth: .5})
       ].forEach(d => marks.push(d))
