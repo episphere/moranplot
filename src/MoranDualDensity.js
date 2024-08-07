@@ -14,17 +14,21 @@ export class MoranDualDensity {
       
       textMode: "label_only",
       fontSize: 12,
+      axisTextOpacity: .6,
       
       zDistribution: "auto", 
       lagDistribution: "auto", 
       lagDistributionDisplay: "stroke", // or "fill" or "stroke"
+
+      pCutoff: 0.05,
 
       labelAreas: true,
 
       areaMode: "cluster_labels", // or "positive_negative" or "hot_cold"
       
       colors: {
-        font: "grey",
+        font: "#414848",
+        significantFont: "green",
         distribution: "#E5E4E2",
         z: "black",
         neighbors: "black",
@@ -33,8 +37,8 @@ export class MoranDualDensity {
         negativeAutocorrelation: "purple",
         highHigh: "#ff3d47",
         highLow: "#f99ae4",
-        lowHigh: "#94d1ff",
-        lowLow: "#186ffb",
+        lowHigh: "#3dc4c7",
+        lowLow: "#0054db",
         outlier: "purple"
       },
     }, options)
@@ -52,7 +56,6 @@ export class MoranDualDensity {
     }
 
     // Text labelling
-    this.text = { z: d => "", lag: d => "", statistic: d => ""}
     if (this.textMode == "verbose") {
       this.text.lag = result => "lag = " + result.lag.toFixed(3) 
       this.text.statistic = result => "Ii = " + result.statistic.toFixed(3) 
@@ -60,7 +63,7 @@ export class MoranDualDensity {
     } else if (this.textMode == "label_only") {
       this.text.lag = result => "lag"
       this.text.statistic = result => "Ii"
-      this.text.z = result => "z"
+      this.text.z = result => ""
     }
 
     this.focalId = null
@@ -271,9 +274,9 @@ export class MoranDualDensity {
 
     marks.push.apply(marks, [
       Plot.text([this.zExtent[0].toFixed(2), 0, this.zExtent[1].toFixed(2)], {
-        x: d => d, frameAnchor: "top", dy: 3, opacity: .8}),
+        x: d => d, frameAnchor: "top", dy: 3, opacity: this.axisTextOpacity}),
       Plot.text([scaleMap.domain()[0].toFixed(2), 0, scaleMap.domain()[1].toFixed(2)],  Plot.mapX((D) => D.map(scaleMap), {
-        x: d => d, frameAnchor: "bottom", dy: -3, opacity: .8})),
+        x: d => d, frameAnchor: "bottom", dy: -3, opacity: this.axisTextOpacity})),
       Plot.ruleX([0], {strokeOpacity: .3, strokeWidth: .5})
     ])
     
@@ -297,7 +300,11 @@ export class MoranDualDensity {
     const axisLabel = result.z < 0 ? "← Local Moran's I" : "Local Moran's I →"
 
     const marks = [
-      Plot.text([axisLabel], {frameAnchor: "bottom-right", dx: this.marginInline}),
+      Plot.text([axisLabel], {frameAnchor: "bottom-right", dx: this.marginRight}),
+      Plot.text([`p' = ${result.p}`] , {
+        frameAnchor: "bottom-left", dx: 15,
+        fill: () => result.p <= this.pCutoff ? this.colors.significantFont : this.colors.font
+      })
     ]
 
     if (ResultDistribution.safeParse(result).success) {

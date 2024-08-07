@@ -13,6 +13,8 @@ export class LagRadial {
     
       size: 180,
       margin: 5,
+
+      fontSize: 12,
       
       innerRadius: 15, 
       pointRadius: [2,5],
@@ -27,7 +29,8 @@ export class LagRadial {
         highLow: "pink",
         lowHigh: "lightblue",
         lowLow: "blue",
-        notSignificant: "grey"
+        notSignificant: "grey",
+        font: "#414848",
       },
     }, options)
     Object.assign(this, options)
@@ -255,6 +258,7 @@ export class LagRadial {
     const gAxis = this.svg.append("g")
       .attr("transform", `translate(${this.size},0)`)
       .attr("opacity", 1) 
+      .style("font-size", this.fontSize + "px")
     gAxis.call(d3.axisRight(this.yScale)
       .tickValues([this.zExtent[1], 0, this.zExtent[0]])
       .tickSize(5))
@@ -263,7 +267,7 @@ export class LagRadial {
     gAxis.selectAll("path")
       .attr("stroke", this.colors.refCircle)
     gAxis.selectAll("text")
-      .attr("fill", "grey")
+      .attr("fill", this.colors.font)
 
     // Stuff on vertical axis
     this.gAxisContent = this.svg.append("g")

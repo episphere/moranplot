@@ -27,6 +27,7 @@ export class MoranNetwork {
       rSmall: 2, rMedium: 3, rBig: 5,      
       drawAxisConnections: false,
       hideXAxis: false, 
+      equalAxes: true,
     }, options)
 
     Object.assign(options, calcMargins(options))
@@ -79,17 +80,23 @@ export class MoranNetwork {
       ...quadrantLabelMarks,
       Plot.frame({strokeOpacity: 0.5}),
     ]
+
+    const yConfig = this.equalAxes ? 
+      {ticks: [this.zExtent[0], 0, this.zExtent[1]], domain: this.zExtent} :
+      {ticks: [this.lagExtent[0], 0, this.lagExtent[1]], domain: this.lagExtent}
     
     this.moranPlot = Plot.plot({
       style: { fontSize: this.fontSize },
       width: this.width, 
       height: this.height,
-      margin: 40, 
+      margin: this.margin, 
       marginBottom: this.marginBottom, marginTop: this.marginTop, marginLeft: this.marginLeft, marginRight: this.marginRight,
       x: {
         ticks: [this.zExtent[0], 0, this.zExtent[1]], domain: this.zExtent, label: this.xLabel, axis: this.hideXAxis ? null : "bottom"
       },
-      y: {ticks: [this.lagExtent[0], 0, this.lagExtent[1]], domain: this.zExtent, label: "Spatial lag"},
+      y: {
+       ...yConfig, label: "Spatial lag"
+      },
       marks
     })
 
@@ -97,7 +104,7 @@ export class MoranNetwork {
     this.dotSelect = this.plotSelect.selectAll("circle")
       .data(this.results)
     this.linkG = this.plotSelect.append("g").lower()
-    this.axisLinkG = this.plotSelect.append("g")
+    this.axisLinkG = this.plotSelect.append("g").lower()
 
     addProximityHover(this.dotSelect, this.plotSelect, (i, elem, iPrev, elemPrev) => {
       this.plotSelect.style("cursor", i != null ? "pointer" : "default")
@@ -168,6 +175,8 @@ export class MoranNetwork {
 
     const neighborSet = new Set() 
     const joins = [] 
+    const axisJoins = []
+    const plotBottom = this.height-10
     for (const id of new Set([this.focusId, ...this.selectIdSet])) {
       if (id == null) continue
 
@@ -184,9 +193,18 @@ export class MoranNetwork {
       const neighborResults = []
       toSelect.each((_,i) => neighborResults.push(this.results[i]))
       const fromPoint = [+fromSelect.attr("cx"), +fromSelect.attr("cy")]
+      axisJoins.push({
+        fromPoint: [+fromSelect.attr("cx"), plotBottom], 
+        toPoint: [+fromSelect.attr("cx"), +fromSelect.attr("cy")]
+      })
       toSelect.each(function(result) {
         var circle = d3.select(this)
         joins.push({fromPoint, toPoint: [+circle.attr("cx"), +circle.attr("cy")], label: result.label})
+
+        axisJoins.push({
+          fromPoint: [+circle.attr("cx"), plotBottom],  
+          toPoint: [+circle.attr("cx"), +circle.attr("cy")]
+        })
       }) 
     }
 
@@ -220,6 +238,20 @@ export class MoranNetwork {
         .attr("x2", d => d.toPoint[0])
         .attr("y2", d => d.toPoint[1])
         .attr("stroke", d => this.colorMap.get(d.label))
+
+    if (this.drawAxisConnections) {
+      this.axisLinkG.selectAll("line")
+        .data(axisJoins)
+        .join("line")
+          .attr("x1", d => d.fromPoint[0])
+          .attr("y1", d => d.fromPoint[1])
+          .attr("x2", d => d.toPoint[0])
+          .attr("y2", d => d.toPoint[1])
+          .attr("stroke", "grey")
+          .attr("opacity", .5)
+          .attr("stroke-dasharray", "2,2")
+    }
+
 
   }
 

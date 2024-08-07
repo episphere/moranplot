@@ -55,7 +55,7 @@ function drawPlots(features, results, centroids) {
     width: networkWidth, marginLeft: 35, marginRight: 35,
     textMode: "label_only", fontSize: 14,
     height: 170, centerHeight: 50,
-    colors: COLORS,
+    colors: COLORS, lagDistribution: null
     // TODO: Remove this temporary code
     // colors: {
     //   ...COLORS, positiveAutocorrelation: COLORS.highHigh, negativeAutocorrelation: COLORS.highLow
