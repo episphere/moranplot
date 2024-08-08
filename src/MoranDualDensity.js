@@ -41,6 +41,8 @@ export class MoranDualDensity {
         lowLow: "#0054db",
         outlier: "purple"
       },
+
+      text: { }
     }, options)
 
     Object.assign(options, calcMargins(options))
