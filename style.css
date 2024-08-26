@@ -140,6 +140,16 @@ header {
   box-shadow: 3px 3px 10px 3px rgb(224, 224, 224);
 }
 
+#data-info {
+  position: absolute;
+  font-family: sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  top: 10px;
+  right: 10px;
+  color: #394440;
+  opacity: .8;
+}
 
 #left {
   width: 40%;
@@ -178,4 +188,17 @@ header {
 .tooltip b {
   font-size: 12px;
   font-family: sans-serif;
+}
+
+.button-label {
+  background-color: rgba(255, 255, 255, 1);
+  font-family: sans-serif;
+  font-size: 0.8em;
+  padding: 8px;
+  border: none;
+  display: none;
+  border-radius: 2px;
+  box-shadow: 1px 1px 5px rgb(217, 217, 217);
+  pointer-events: none;
+  user-select: none;
 }
